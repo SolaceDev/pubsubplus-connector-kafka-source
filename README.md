@@ -61,7 +61,7 @@ It builds on the open source [Apache Kafka Quickstart tutorial](https://kafka.ap
 **Step 1**: Install Kafka. Follow the [tutorial](//kafka.apache.org/quickstart#quickstart_download) to download the Kafka release code, start the Zookeeper and Kafka servers in separate command line sessions, then create a topic named `test` and verify it exists.
 
 **Step 2**: Install PubSub+ Source Connector. Designate and create a directory for the PubSub+ Source Connector - assuming it is named `connectors`. Edit `config/connect-standalone.properties` and ensure the `plugin.path` parameter value includes the absolute path of the `connectors` directory.
-[Download](//solacedev.github.io/pubsubplus-connector-kafka-source/downloads/ and expand the PubSub+ Source Connector into the `connectors` directory.
+[Download ](//solacedev.github.io/pubsubplus-connector-kafka-source/downloads) and expand the PubSub+ Source Connector into the `connectors` directory.
 
 **Step 3**: Acquire access to a PubSub+ message broker. If you don't already have one available, the easiest option is to get a free-tier service in a few minutes in [PubSub+ Cloud](//solace.com/try-it-now/) , following the [Creating Your First Messaging Service] (//docs.solace.com/Solace-Cloud/ggs_signup.htm) guide. 
 
@@ -86,7 +86,7 @@ After startup logs shall eventually contain following line:
 ================Session is Connected
 ```
 
-**Step 6**: Watch messages arriving to Kafka. Get back to the Kafka [tutorial](//kafka.apache.org/quickstart#quickstart_consume) and start a consumer on the `test` topic.
+**Step 6**: Start to watch messages arriving to Kafka. Get back to the Kafka [tutorial](//kafka.apache.org/quickstart#quickstart_consume) and start a consumer on the `test` topic.
 
 **Step 7**: Demo time!
 To generate an event into PubSub+, we will use the "Try Me!" test service of the browser-based administration console to publish test messages to the `sourcetest` topic. Behind the scenes "Try Me!" is using the WebSocket API from JavaScript code.
