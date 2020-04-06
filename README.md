@@ -4,10 +4,17 @@
 
 This project provides a Solace PubSub+ Event Broker to [Kafka Source Connector]() (adapter) that makes use of the [Kafka Connect API]().
 
-> Note: there is also a PubSub+ Sink Connector for Kafka available from the [PubSub+ Connector Kafka Sink]() GitHub repository.
+> Note: there is also a PubSub+ Kafka Sink Connector available from the [PubSub+ Connector Kafka Sink]() GitHub repository.
 
 Contents:
 
+  * [Overview](#overview)
+  * [Use Cases](#use-cases)
+  * [Downloads](#downloads)
+  * [Quick Start](#quick-start)
+  * [Parameters](#parameters)
+  * [User Guide](#user-guide)
+  * [Developers Guide](#developers-guide)
 
 ## Overview
 
@@ -15,7 +22,7 @@ The PubSub+ to Kafka adapter consumes PubSub+ Event Broker real-time queue or to
 
 The PubSub+ Source Connector was created using the event brokers high performance Java API to move PubSub+ data events to the Kafka Broker.
 
-### Use Cases
+## Use Cases
 
 #### Protocol and API messaging transformations
 
