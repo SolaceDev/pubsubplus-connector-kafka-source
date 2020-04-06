@@ -54,42 +54,48 @@ The package includes jar libraries, documentation with license information and s
 
 ## Quick Start
 
-This example demonstrates an end-to-end scenario similar to the [Protocol and API messaging transformations]() use case, using the WebSocket API to publish a message to the PubSub+ event broker.
+This example demonstrates an end-to-end scenario similar to the [Protocol and API messaging transformations](#protocol-and-api-messaging-transformations) use case, using the WebSocket API to publish a message to the PubSub+ event broker.
 
 It builds on the open source [Apache Kafka Quickstart tutorial](https://kafka.apache.org/quickstart) and will walk through how to get started in a standalone environment for development purposes. Refer to the User Guide section for setting up a distributed environment for production purposes.
 
-Step 1: Install Kafka. Follow the [tutorial](//kafka.apache.org/quickstart#quickstart_download) to download the Kafka release code, start the Zookeeper and Kafka servers in separate command line sessions, then create a topic named `test` and verify it exists.
+**Step 1**: Install Kafka. Follow the [tutorial](//kafka.apache.org/quickstart#quickstart_download) to download the Kafka release code, start the Zookeeper and Kafka servers in separate command line sessions, then create a topic named `test` and verify it exists.
 
-Step 2: Install PubSub+ Source Connector. Designate and create a directory for the PubSub+ Source Connector - assuming it is named `connectors`. Edit `config/connect-standalone.properties` and ensure the `plugin.path` parameter value includes the absolute path of the `connectors` directory.
+**Step 2**: Install PubSub+ Source Connector. Designate and create a directory for the PubSub+ Source Connector - assuming it is named `connectors`. Edit `config/connect-standalone.properties` and ensure the `plugin.path` parameter value includes the absolute path of the `connectors` directory.
 [Download](//solacedev.github.io/pubsubplus-connector-kafka-source/downloads/ and expand the PubSub+ Source Connector into the `connectors` directory.
 
-Step 3: Acquire access to a PubSub+ message broker. If you don't already have one available, the easiest option is to get a free-tier service in a few minutes in [PubSub+ Cloud](//solace.com/try-it-now/), following the [Creating Your First Messaging Service] (//docs.solace.com/Solace-Cloud/ggs_signup.htm) guide. 
+**Step 3**: Acquire access to a PubSub+ message broker. If you don't already have one available, the easiest option is to get a free-tier service in a few minutes in [PubSub+ Cloud](//solace.com/try-it-now/), following the [Creating Your First Messaging Service] (//docs.solace.com/Solace-Cloud/ggs_signup.htm) guide. 
 
-Step 4: Configure the PubSub+ Source Connector:
+**Step 4**: Configure the PubSub+ Source Connector:
 a) Locate the following connection information of your messaging service for the "Solace Java API" (this is what the connector is using inside):
 * Username, Password, Message VPN, one of the Host URIs;
-and edit the PubSub+ Source Connector properties file located at `connectors/pubsubplus-connector-kafka-source-<version>/etc/solace_source.properties`  updating following respective parameters so the connector can access the PubSub+ event broker:
-* `sol.username`, `sol.password`, `sol.vpn_name`, `sol.host`;
-b) Note the configured source and destination information: the `sol.topics` parameter specifies the ingress topic on PubSub+ (`sourcetest`) and `kafka.topic` is the Kafka destination topic (`test`), created in Step 1.
 
-Step 6: Start the connector in standalone mode. In a command line session run:
+b) edit the PubSub+ Source Connector properties file located at `connectors/pubsubplus-connector-kafka-source-<version>/etc/solace_source.properties`  updating following respective parameters so the connector can access the PubSub+ event broker:
+* `sol.username`, `sol.password`, `sol.vpn_name`, `sol.host`;
+
+c) Note the configured source and destination information: the `sol.topics` parameter specifies the ingress topic on PubSub+ (`sourcetest`) and `kafka.topic` is the Kafka destination topic (`test`), created in Step 1.
+
+**Step 5**: Start the connector in standalone mode. In a command line session run:
 ```sh
 bin/connect-standalone.sh \
 config/connect-standalone.properties \
 connectors/pubsubplus-connector-kafka-source-<version>/etc/solace_source.properties
 ```
 After startup logs shall eventually contain following line:
-`================Session is Connected`
+```
+================Session is Connected
+```
 
-Step 7: Watch messages arriving to Kafka. Get back to the Kafka [tutorial](//kafka.apache.org/quickstart#quickstart_consume) and start a consumer on the `test` topic.
+**Step 6**: Watch messages arriving to Kafka. Get back to the Kafka [tutorial](//kafka.apache.org/quickstart#quickstart_consume) and start a consumer on the `test` topic.
 
-Step 8: Demo time!
-To generate an event into PubSub+, we will use the "Try Me!" test service of the browser-based administration console to publish test messages to the `sourcetest` topic. Behind the scenes "Try Me!" is using the WebSocket API from JavaScript.
+**Step 7**: Demo time!
+To generate an event into PubSub+, we will use the "Try Me!" test service of the browser-based administration console to publish test messages to the `sourcetest` topic. Behind the scenes "Try Me!" is using the WebSocket API from JavaScript code.
+
 * If you are using PubSub+ Cloud for your messaging service follow the [Trying Out Your Messaging Service Guide](//docs.solace.com/Solace-Cloud/ggs_tryme.htm).
 * If using an existing event broker, log in to its [PubSub+ Manager admin console](//docs.solace.com/Solace-PubSub-Manager/PubSub-Manager-Overview.htm#mc-main-content), and follow [How to Send and Receive Test Messages] (//docs.solace.com/Solace-PubSub-Manager/PubSub-Manager-Overview.htm#Test-Messages).
+
 In both cases ensure to set the topic to `sourcetest`, which the connector is listening to.
 
-The Kafka consumer from Step 7 should now display the new message arriving to Kafka:
+The Kafka consumer from Step 6 should now display the new message arriving to Kafka:
 ```
 Hello world!
 ```
