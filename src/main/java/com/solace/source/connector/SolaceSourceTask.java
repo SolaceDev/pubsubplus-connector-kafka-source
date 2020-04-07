@@ -93,7 +93,7 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
         stop();
       }
     }
-    if (connectorConfig.getString(SolaceSourceConstants.SOl_QUEUE) != null) {
+    if (connectorConfig.getString(SolaceSourceConstants.SOL_QUEUE) != null) {
       queueConsumer = new SolaceSourceQueueConsumer(connectorConfig, solSessionHandler);
       if (!queueConsumer.init(ingressMessages)) {
         log.info("================ Failed to start queue consumer ... shutting down");

@@ -48,7 +48,7 @@ The PubSub+ Source Connector eliminates the complexity and overhead of maintaini
 
 ## Downloads
 
-ZIP or TAR packaged PubSub+ source connector is available from the [downloads](//solacedev.github.io/pubsubplus-connector-kafka-source/downloads/) page.
+ZIP or TAR packaged PubSub+ Kafka source connector is available from the [downloads](//solacedev.github.io/pubsubplus-connector-kafka-source/downloads/) page.
 
 The package includes jar libraries, documentation with license information and sample property files. Download and expand it into a directory that is on the `plugin.path` of your connect-standalone or connect-distributed properties file.
 
@@ -56,9 +56,11 @@ The package includes jar libraries, documentation with license information and s
 
 This example demonstrates an end-to-end scenario similar to the [Protocol and API messaging transformations](#protocol-and-api-messaging-transformations) use case, using the WebSocket API to publish a message to the PubSub+ event broker.
 
-It builds on the open source [Apache Kafka Quickstart tutorial](https://kafka.apache.org/quickstart) and will walk through how to get started in a standalone environment for development purposes. Refer to the User Guide section for setting up a distributed environment for production purposes.
+It builds on the open source [Apache Kafka Quickstart tutorial](https://kafka.apache.org/quickstart) and will walk through how to get started in a standalone environment for development purposes. For setting up a distributed environment for production purposes refer to the User Guide section.
 
-**Step 1**: Install Kafka. Follow the [tutorial](//kafka.apache.org/quickstart#quickstart_download) to download the Kafka release code, start the Zookeeper and Kafka servers in separate command line sessions, then create a topic named `test` and verify it exists.
+> Note: the steps are similar if using [Confluent Kafka](//www.confluent.io/download/); there may be difference in the root directory where the Kafka binaries (`bin`) and properties (`etc/kafka`) are located.
+
+**Step 1**: Install Kafka. Follow the [Apache tutorial](//kafka.apache.org/quickstart#quickstart_download) to download the Kafka release code, start the Zookeeper and Kafka servers in separate command line sessions, then create a topic named `test` and verify it exists.
 
 **Step 2**: Install PubSub+ Source Connector. Designate and create a directory for the PubSub+ Source Connector - assuming it is named `connectors`. Edit `config/connect-standalone.properties` and ensure the `plugin.path` parameter value includes the absolute path of the `connectors` directory.
 [Download]( https://solacedev.github.io/pubsubplus-connector-kafka-source/downloads ) and expand the PubSub+ Source Connector into the `connectors` directory.
@@ -81,7 +83,7 @@ bin/connect-standalone.sh \
 config/connect-standalone.properties \
 connectors/pubsubplus-connector-kafka-source-<version>/etc/solace_source.properties
 ```
-After startup logs shall eventually contain following line:
+After startup, logs shall eventually contain following line:
 ```
 ================Session is Connected
 ```
@@ -89,33 +91,42 @@ After startup logs shall eventually contain following line:
 **Step 6**: Start to watch messages arriving to Kafka. Get back to the Kafka [tutorial](//kafka.apache.org/quickstart#quickstart_consume) and start a consumer on the `test` topic.
 
 **Step 7**: Demo time!
-To generate an event into PubSub+, we will use the "Try Me!" test service of the browser-based administration console to publish test messages to the `sourcetest` topic. Behind the scenes "Try Me!" is using the WebSocket API from JavaScript code.
+To generate an event into PubSub+, we will use the "Try Me!" test service of the browser-based administration console to publish test messages to the `sourcetest` topic. Behind the scenes, "Try Me!" is using the WebSocket API from JavaScript code.
 
-* If you are using PubSub+ Cloud for your messaging service follow the [Trying Out Your Messaging Service Guide](//docs.solace.com/Solace-Cloud/ggs_tryme.htm).
-* If using an existing event broker, log in to its [PubSub+ Manager admin console](//docs.solace.com/Solace-PubSub-Manager/PubSub-Manager-Overview.htm#mc-main-content), and follow [How to Send and Receive Test Messages] (//docs.solace.com/Solace-PubSub-Manager/PubSub-Manager-Overview.htm#Test-Messages).
+* If you are using PubSub+ Cloud for your messaging service follow the [Trying Out Your Messaging Service guide](//docs.solace.com/Solace-Cloud/ggs_tryme.htm).
+* If using an existing event broker, log in to its [PubSub+ Manager admin console](//docs.solace.com/Solace-PubSub-Manager/PubSub-Manager-Overview.htm#mc-main-content), and follow the [How to Send and Receive Test Messages guide] (//docs.solace.com/Solace-PubSub-Manager/PubSub-Manager-Overview.htm#Test-Messages).
 
 In both cases ensure to set the topic to `sourcetest`, which the connector is listening to.
 
-The Kafka consumer from Step 6 should now display the new message arriving to Kafka:
+The Kafka consumer from Step 6 should now display the new message arriving to Kafka through the PubSub+ Kafka source connector:
 ```
 Hello world!
 ```
 
-
-
 ## Parameters
 
-Connector parameters consist of Kafka-defined parameters and PubSub+ connector specific parameters.
+Connector parameters consist of [Kafka-defined parameters](https://kafka.apache.org/documentation/#connect_configuring) and PubSub+ connector-specific parameters.
 
-Refer to the properties or json configuration examples.
+Refer to the in-line documentation of the [sample PubSub+ Kafka source connector properties file](/etc/solace_source.properties) and additional information in the [Configuration](#Configuration) section.
 
 ## User Guide
 
 ### Installation
 
+The quick start describes
+
 ### Configuration
 
+#### Production deployment
+
+
+
+
 ## Developers Guide
+
+### Build the project
+
+
 
 
 
