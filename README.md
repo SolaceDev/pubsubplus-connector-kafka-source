@@ -114,9 +114,9 @@ Refer to the in-line documentation of the [sample PubSub+ Kafka source connector
 
 ### Deployment
 
-The PubSub+ Source Connector deployment has been tested on Apache Kafka 2.12 and Confluent Kafka 5.4 platforms. The Kafka software is typically placed under the root directory: "/opt/<provider>/<kafka or confluent-version>".
+The PubSub+ Source Connector deployment has been tested on Apache Kafka 2.12 and Confluent Kafka 5.4 platforms. The Kafka software is typically placed under the root directory: `/opt/<provider>/<kafka or confluent-version>`.
 
-Kafka distributions may be available as install bundles, Docker images, Kubernetes deployments, etc. They all include support for Kafka Connect, the scripts, tools and sample properties for connector deployments.
+Kafka distributions may be available as install bundles, Docker images, Kubernetes deployments, etc. They all support Kafka Connect which includes the scripts, tools and sample properties for Kafka connectors.
 
 Kafka provides two options for connector deployment: [standalone mode and distributed mode](//kafka.apache.org/documentation/#connect_running).
 
@@ -142,18 +142,17 @@ In this case the IP address is one of the nodes running the distributed mode wor
 At this point, it is now possible to start the connector in distributed mode with a command similar to:
 
 ```ini
-curl -X POST -H "Content-Type: application/json" -d @solace_source_properties.json http://18.218.82.209:8083/connectors
+curl -X POST -H "Content-Type: application/json" \
+             -d @solace_source_properties.json \
+             http://18.218.82.209:8083/connectors
 ``` 
 
-Again, the IP address is one of the nodes running the Distributed mode Worker process. The connector's JSON configuration file, in this case, 
-is called "solace_source_properties.json".
+The connector's JSON configuration file, in this case, is called "solace_source_properties.json". A sample is available [here](/etc/solace_source_properties.json), which can be extended with the same properties as described in the [Parameters section](#parameters).
 
-You can determine if the Source Connector is running with the following command:
-
+Determine if the Source Connector is running with the following command:
 ```ini
 curl 18.218.82.209:8083/connectors/solaceSourceConnector/status | jq
 ```
-
 If there was an error in starting, the details will be returned with this command. 
 
 ### Troubleshooting
