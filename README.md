@@ -112,16 +112,60 @@ Refer to the in-line documentation of the [sample PubSub+ Kafka source connector
 
 ## User Guide
 
-### Installation
+### Deployment
 
-The quick start describes
+The PubSub+ Source Connector deployment has been tested on Apache Kafka 2.12 and Confluent Kafka 5.4 platforms. The Kafka software is typically placed under the root directory: "/opt/<provider>/<kafka or confluent-version>".
 
-### Configuration
+Kafka distributions may be available as install bundles, Docker images, Kubernetes deployments, etc. They all include support for Kafka Connect, the scripts, tools and sample properties for connector deployments.
 
-#### Production deployment
+Kafka provides two options for connector deployment: [standalone mode and distributed mode](//kafka.apache.org/documentation/#connect_running).
+
+* In standalone mode, recommended for testing only, configuration is provided together in the Kafka `connect-standalone.properties` and in the PubSub+ Source Connector `solace_source.properties` files and passed to the `connect-standalone` Kafka shell script running on a single worker node (machine), as seen in the [Quick Start](#quick-start).
+
+* In distributed mode, Kafka configuration is provided in `connect-distributed.properties` and passed to the `connect-distributed` Kafka shell script, which is started on each worker node. The `group.id` parameter identifies worker nodes belonging the same group. The script starts a REST server on each worker node and PubSub+ Source Connector configuration is passed to any one of the worker nodes in the group through REST requests in JSON format.
+
+To deploy the Connector, for each target machine [download]( https://solacedev.github.io/pubsubplus-connector-kafka-source/downloads ), and expand the PubSub+ Source Connector into a directory and ensure the `plugin.path` parameter value in the `connect-*.properties` includes the absolute path to that directory. Note that Kafka Connect, i.e. the `connect-standalone` or `connect-distributed` Kafka shell scripts must be restarted or equivalent action from a Kafka console is required if the PubSub+ Source Connector deployment is updated.
+
+Some PubSub+ Source Connector configurations may require the deployment of additional specific files like keystores, truststores, Kerberos config files, etc. It does not matter where these additional files are located, but they must be available on all Kafka Connect Cluster nodes and placed in the same location on all the nodes because they are referenced by absolute location and configured only once through one REST request for all.
+
+#### REST JSON Configuration
+
+First test to confirm the PubSub+ Source Connector is available for use in distributed mode with the command:
+```ini
+curl http://18.218.82.209:8083/connector-plugins | jq
+```
+
+In this case the IP address is one of the nodes running the distributed mode worker process, the port is default 8083 or as specified in the `rest.port` property in `connect-distributed.properties`. If the connector is loaded correctly, you should see something similar to:
+
+![Connector List](resources/RESTConnectorListSmall.png)
+
+At this point, it is now possible to start the connector in distributed mode with a command similar to:
+
+```ini
+curl -X POST -H "Content-Type: application/json" -d @solace_source_properties.json http://18.218.82.209:8083/connectors
+``` 
+
+Again, the IP address is one of the nodes running the Distributed mode Worker process. The connector's JSON configuration file, in this case, 
+is called "solace_source_properties.json".
+
+You can determine if the Source Connector is running with the following command:
+
+```ini
+curl 18.218.82.209:8083/connectors/solaceSourceConnector/status | jq
+```
+
+If there was an error in starting, the details will be returned with this command. 
+
+### Troubleshooting
+
+`logs` directory
+
+### Message processors
 
 
+### Performance considerations
 
+### Security Considerations
 
 ## Developers Guide
 
@@ -167,35 +211,35 @@ The quick start describes
 
 ## Synopsis
 
-This project provides a Solace/Kafka Source Connector (adapter) that makes use of the Kafka Connect API.
+This project provides a Solace/Kafka Source Connector (adapter) that makes use of the Kafka Connect framework.
 The Solace/Kafka adapter consumes Solace real-time queue or topic data events and streams the Solace events to a Kafka topic. 
 
-The Solace Source Connector was created using Solace's high performance Java API to move Solace data events to the Kafka Broker. 
+The PubSub+ Source Connector was created using Solace's high performance Java API to move Solace data events to the Kafka Broker. 
 Unlike many other message brokers, Solace supports transparent protocol and API messaging transformations, therefore, 
 any message that reaches the Solace broker, regardless of the many Solace supported message transports or language/API, can be moved to a Topic 
-(Key or not Keyed) on the Kafka Broker via the single Solace Source Connector. 
+(Key or not Keyed) on the Kafka Broker via the single PubSub+ Source Connector. 
 
 Consider the following diagram:
 
 ![Architecture Overview](resources/KSource3.png)
 
-It does not matter if the ingress message to the Solace broker (appliance, software or cloud) is from an iPhone, a REST POST or an AMQP, JMS or MQTT message, it can be sent automatically to the Kafka Topic via the Solace Source Connector.
+It does not matter if the ingress message to the Solace broker (appliance, software or cloud) is from an iPhone, a REST POST or an AMQP, JMS or MQTT message, it can be sent automatically to the Kafka Topic via the PubSub+ Source Connector.
 
-The Solace Source Connector also ties Kafka records into the Solace Event Mesh. 
+The PubSub+ Source Connector also ties Kafka records into the Solace Event Mesh. 
 The Event Mesh is a clustered group of Solace PubSub+ Brokers that transparently, in real-time, route data events to any Service that is part of the Event Mesh. 
 Solace PubSub+ Brokers (Appliances, Software and SolaceCloud) are connected to each other as a multi-connected mesh that to individual services 
 (consumers or producers of data events) appears to be a single Event Broker. Events messages are seamlessly transported within the entire Solace Event 
 Mesh regardless of where the event is created and where the process exists that has registered interested in consuming the event. 
-Simply by having the Solace Source Connector register interest in receiving events, the entire Event Mesh becomes aware of the registration request and will know how to securely 
-route the appropriate events generated by other service on the Event Mesh to the Solace Source Connector. The Solace Source Connector takes those event
+Simply by having the PubSub+ Source Connector register interest in receiving events, the entire Event Mesh becomes aware of the registration request and will know how to securely 
+route the appropriate events generated by other service on the Event Mesh to the PubSub+ Source Connector. The PubSub+ Source Connector takes those event
  messages and sends them as Kafka Source Records to the Kafka broker for storage in a Kafka Topic.
 
-The Solace Source Connector allows any event from any service in the Solace Event Mesh to generate a new record in Kafka. 
+The PubSub+ Source Connector allows any event from any service in the Solace Event Mesh to generate a new record in Kafka. 
 It does not matter which service in the Event Mesh created the event, they are all potentially available for storage in Kafka via
  a single Solace Source Connctor.There is no longer a requirement for separate Kafka Source Connectors to each of the separate services. 
-The single Solace Source Connector is all that is required. Any event that the connector registers interest in receiving from the Event Mesh is stored in Kafkfa. 
+The single PubSub+ Source Connector is all that is required. Any event that the connector registers interest in receiving from the Event Mesh is stored in Kafkfa. 
 
-The Solace Source Connector eliminates the complexity and overhead of maintaining separate Source Connectors for each and every service that generates data events that Kafka may wish to consume. 
+The PubSub+ Source Connector eliminates the complexity and overhead of maintaining separate Source Connectors for each and every service that generates data events that Kafka may wish to consume. 
 There is the added benefit of access to services where there is no Kafka Source Connector available, thereby eliminating the need to create and maintain a new connector for 
 services from which Kafka may wish to store the data.
 
@@ -203,24 +247,24 @@ Consider the following:
 
 ![Event Mesh](resources/EventMesh.png)
 
-A single Solace Source Connector will be able to move service events from any upstream service to Kafka via a single connector. 
+A single PubSub+ Source Connector will be able to move service events from any upstream service to Kafka via a single connector. 
 
-The Solace Source Connector also ties into Solace's location transparency for the Event Mesh PubSub+ brokers. 
+The PubSub+ Source Connector also ties into Solace's location transparency for the Event Mesh PubSub+ brokers. 
 Solace supports a wide range of brokers for deployment. 
 There are three major categories of Solace PubSub+ brokers: dedicated extreme performance hardware appliances, 
 high performance software brokers that are deployed as software images (deployable under most Hypervisors, Cloud IaaS and PaaS layers and in Docker) 
 and provided as a fully managed Cloud MaaS (Messaging as a Service). 
 
 It does not matter what Solace Broker is used or where it is deployed, it can become part of the Solace Event Mesh. 
-Therefore, there are no restrictions on where the Solace Source Connector is deployed or what PubSub+ broker is used to connect Kafka to the Solace Event Bus. 
-The Solace Event Mesh infrastructure will allow, via the Solace Source Connector, any events in the Event Mesh to be transported and stored in Kafka. 
+Therefore, there are no restrictions on where the PubSub+ Source Connector is deployed or what PubSub+ broker is used to connect Kafka to the Solace Event Bus. 
+The Solace Event Mesh infrastructure will allow, via the PubSub+ Source Connector, any events in the Event Mesh to be transported and stored in Kafka. 
 
 Consider the following:
 
 ![Location Independence](resources/SolaceCloud1.png)
 
 It does not matter where in the Service Mesh the Service is located that generated the event.
-It does not matter if Solace Source Connector was connected to a Solace PubSub+ broker that was an appliance, 
+It does not matter if PubSub+ Source Connector was connected to a Solace PubSub+ broker that was an appliance, 
 on premise or Cloud software, or the the Cloud managed MaaS, it will immediately, in real time, be available to pass that data for Storage in Kafka. 
 
 It is important to mention that there is also a Solace Sink Connector for Kafka available. The Solace Sink Connector allows consumption of new Kafka Records added to the Kafka brokers to 
@@ -243,14 +287,14 @@ To actually create the  Connector Jar file use:
 
 ## Deployment
 
-The Solace Source Connector has been tested in three environments: Apache Kafka, Confluent Kafka and the AWS Confluent Platform. 
+The PubSub+ Source Connector has been tested in three environments: Apache Kafka, Confluent Kafka and the AWS Confluent Platform. 
 For testing, it is recommended to use the single node deployment of Apache or Confluent Kafka software.
 
-To deploy the Connector, as described in the Kafka documentation, it is necessary to move the Connector jar file and the required third party jar files to a directory that is part of the Worker-defined classpath. Details for installing the Solace Source Connector are described in the next two sub sections. 
+To deploy the Connector, as described in the Kafka documentation, it is necessary to move the Connector jar file and the required third party jar files to a directory that is part of the Worker-defined classpath. Details for installing the PubSub+ Source Connector are described in the next two sub sections. 
 
 #### Apache Kafka
 
-For Apache Kafka, the software is typically found, for example for the 2.11 version, under the root directory: "/opt/kafka-apache/"kafka_2.11-1.1.0". Typically the Solace Source Connector would be placed under the "libs" directory under the root directory. All required Solace JCSMP JAR files should be placed under the same "libs" directory. The properties file for the connector would typically be placed under the "config" directory below the root directory. 
+For Apache Kafka, the software is typically found, for example for the 2.11 version, under the root directory: "/opt/kafka-apache/"kafka_2.11-1.1.0". Typically the PubSub+ Source Connector would be placed under the "libs" directory under the root directory. All required Solace JCSMP JAR files should be placed under the same "libs" directory. The properties file for the connector would typically be placed under the "config" directory below the root directory. 
 
 To start the connector in stand-alone mode while in the "bin" directory the command would be similar to:
 
@@ -269,14 +313,14 @@ If you do not want the output to console, simply add the "-daemon" option and al
 The Confluent Kafka software is typically placed under the root directory: "/opt/confluent/confluent-4.1.1". In this case it is for the 4.1.1 version of Confluent. 
 By default, the Confluent software is started in distributed mode with the REST Gateway started. 
 
-The Solace Source Connector would typically be placed in the "/opt/confluent/confluent-4.1.1/share/java/kafka-connect-solace" directory. 
+The PubSub+ Source Connector would typically be placed in the "/opt/confluent/confluent-4.1.1/share/java/kafka-connect-solace" directory. 
 You will need to create the "kafka-connect-solace" directory. 
 You must place all the required Solace JCSMP JAR files under this same directory. 
 If you plan to run the Source Connector in stand-alone mode, it is suggested to place the properties file under the same directory.
 
 After the Solace files are installed and if you are familiar with Kafka administration, it is recommended to restart the Confluent Connect software if Confluent is running in Distributed mode. Alternatively, it is simpler to just start and restart the Confluent software with the "confluent" command.
 
-At this point you can test to confirm the Solace Source Connector is available for use  in distributed mode with the command:
+At this point you can test to confirm the PubSub+ Source Connector is available for use  in distributed mode with the command:
 ```ini
 curl http://18.218.82.209:8083/connector-plugins | jq
 ```
@@ -304,7 +348,7 @@ If there was an error in starting, the details will be returned with this comman
 
 ## Configuration
 
-The Solace Source Connector configuration is managed by the configuration file. For stand-alone Kafka deployments a properties file is used. A sample is enclosed with the project.
+The PubSub+ Source Connector configuration is managed by the configuration file. For stand-alone Kafka deployments a properties file is used. A sample is enclosed with the project.
 
 For distributed Kafka deployments the connector can be deployed via REST as a JSON configuration file. A sample is enclosed with the project. 
 
@@ -313,7 +357,7 @@ equivalent to the details for the Solace **JCSMPSessionProperties** class. Detai
 
 [Solace Java API](https://docs.solace.com/API-Developer-Online-Ref-Documentation/java/index.html)
 
-For tuning, performance and scaling (multiple tasks is supported with this connector) of the Solace Source Connector, please refer to the Solace PubSub+ documentation that can be found here:
+For tuning, performance and scaling (multiple tasks is supported with this connector) of the PubSub+ Source Connector, please refer to the Solace PubSub+ documentation that can be found here:
 
 [Solace PubSub+ Documentation](https://docs.solace.com/)
 
@@ -333,7 +377,7 @@ you can test your Source Connector by using "default" as value for the username,
 The host should match the IP address of the broker.
 
 For connectivity to Kafka, the Source Connector has four basic configuration requirements: name for the Connector Plugin, the name of the Java Class
-for the connector, the number of Tasks the connector should deploy and the name of the Kafka Topic. The following is an example for the Solace Source Connector:
+for the connector, the number of Tasks the connector should deploy and the name of the Kafka Topic. The following is an example for the PubSub+ Source Connector:
 
 ```ini
 name=solaceConnector
@@ -352,7 +396,7 @@ the Solace literature, and will not be repeated here. All the PKI required confi
 Kerberos authentication support is also available. It requires a bit more configuration than PKI since it is not defined as part of the Solace session or transport. Typical Kerberos client applications require details about the Kerberos configuration and details for the authentication. Since the Source Connector is a server application (i.e. no direct user interaction) a Kerberos keytab file is required as part of the authentication. 
 
 The enclosed configuration files are samples that will allow automatic Kerberos authentication for the Source Connector when it is deployed to the Connect Cluster. The sample files included are
-the "krb5.conf" and "login.conf". It does not matter where the files are located, but they must be available on all Kafka Connect CLuster nodes and placed in the same location on all the nodes. The files are then referenced in the connector configuration files, for example:
+the "krb5.conf" and "login.conf". It does not matter where the files are located, but they must be available on all Kafka Connect Cluster nodes and placed in the same location on all the nodes. The files are then referenced in the connector configuration files, for example:
 
 ```ini
 sol.kerberos.login.conf=/opt/kerberos/login.conf
@@ -403,7 +447,7 @@ More information on Kafka Connect can be found here:
 
 #### Scaling the Source Connector
 
-The Solace Source Connector will scale when more performance is required. There is only so much throughput that can be pushed through the 
+The PubSub+ Source Connector will scale when more performance is required. There is only so much throughput that can be pushed through the 
 Connect API. The Solace broker supports far greater throughput than can be afforted through a single instance of the Connect API. 
 The Kafka Broker can also produce records at a rate far greater than available through a single instance of the Connector. 
 Therefore, multiple instances of the Source Connector will increase throughput from the Kafka broker to the Solace PubSub+ broker.
@@ -456,7 +500,7 @@ Kafka, the Solace Sink Connector can be used to generate DTO tagged messages.
 
 #### Sending Solace Events to Kafka
 
-The Solace Source Connector consumes registered Solace Data Even Messages and writes them to Kafka as Source Records. The connector can register 
+The PubSub+ Source Connector consumes registered Solace Data Even Messages and writes them to Kafka as Source Records. The connector can register 
 interest in receiving Solace Queue or Topic message events. 
 
 When using Topics, Solace uses "best effort" to deliver the events to the Sink Connector. If the Connector is down, or messages are constantly generated
@@ -467,16 +511,16 @@ When using Topics, Solace uses "best effort" to deliver the events to the Sink C
  As mentioned above, the Connect API may become the limiting factor for processing of the events. 
  To prevent potential data loss thorough the Connector when using topics, it may be necessary to scale the number of connector task instances.
  
-It is also possible to have the Solace Source Connector register interest in the Service Mesh to attract data events from Solace Queues 
+It is also possible to have the PubSub+ Source Connector register interest in the Service Mesh to attract data events from Solace Queues 
 . A Solace Queue guarantees order of deliver, provides High Availability and Disaster Recovery (depending on the setup of the PubSub+ brokers)
  and provides an acknowledgment to the message producer (in this case the Solace event producer application) when the event is stored in all 
  HA and DR members and flushed to disk. This is a higher guarantee than is provided by Kafka even for Kafka idempotent delivery.
  
 When A Kafka Topic is configured with it's highest quality-of-service, with respect to record loss or duplication, it results in a large reduction in record processing throughput. 
-However, in some application requirements this QoS is required. In this case, the Solace Source Connector should use Solace Queues for the consumption
+However, in some application requirements this QoS is required. In this case, the PubSub+ Source Connector should use Solace Queues for the consumption
 of events from the Event Mesh.
 
-The Solace Source Connector consumes messages from the queue and streams the records to the Kafka Topic. A timed process (which is configurable in the
+The PubSub+ Source Connector consumes messages from the queue and streams the records to the Kafka Topic. A timed process (which is configurable in the
  in the Worker's configuration file), flushes the records and offset to to disk. The Solace Connector will consume/process the messages from the queue
  and when 500 messages are processed or the current connector "poll()" method completes, it will force the Kafka to flush records and the offset. The poll() method will also acknowledge all the  Solace Queue data event messages that were committed to the Kafka Topic. Acknowledging the Solace Queue messages that were processed
  removes these event messages from the Solace Queue. 
@@ -485,7 +529,7 @@ The Solace Source Connector consumes messages from the queue and streams the rec
   not lost, they will be retransmitted as soon as the connector or Kafka are restarted. It is important to note that while connector or the
   Kafka Broker are offline, the Solace Queue will continue to add event messages, so there will be no loss of new data from the Solace Event Mesh.
   
-When the Kafka consumers require the highest level of QoS, it is recommended to use the Solace Source Connector against Solace Queues. If the throughput
+When the Kafka consumers require the highest level of QoS, it is recommended to use the PubSub+ Source Connector against Solace Queues. If the throughput
 through the Connect is not high enough, and messages are starting to accumulate in the Solace Queue, scaling of the Connector is recommended
 as discussed above. If the Source Connector has not been scaled to a required level to deal with bursts  the Solace Queue can act as a "shock absorber"
 to deal with micro-bursts or sustained periods of heavy event generation in the Event Mesh. Data events will no be lost of the connector is under-scaled due to 
