@@ -14,6 +14,11 @@ Contents:
   * [Quick Start](#quick-start)
   * [Parameters](#parameters)
   * [User Guide](#user-guide)
+    + [Deployment](#deployment)
+    + [Troubleshooting](#troubleshooting)
+    + [Message processors](#message-processors)
+    + [Performance considerations](#performance-considerations)
+    + [Security Considerations](#security-considerations)  
   * [Developers Guide](#developers-guide)
 
 ## Overview
@@ -166,7 +171,7 @@ If there was an error in starting, the details will be returned with this comman
 
 In standalone mode, connect logs are written to the console. If you do not want the output to console, simply add the "-daemon" option and all output will be directed to the logs directory.
 
-In distributed mode, the logs location is determined by the `connect-log4j.properties` located at the `config` directory in the Apache Kafka distribution or under `/etc/kafka/` in the Confluent distribution.
+In distributed mode, the logs location is determined by the `connect-log4j.properties` located at the `config` directory in the Apache Kafka distribution or under `etc/kafka/` in the Confluent distribution.
 
 If logs are redirected to the standard output, here is a sample log4j.properties snippet to direct them to a file:
 ```
@@ -187,7 +192,6 @@ log4j.logger.com.solacesystems.jcsmp=DEBUG
 Ensure to set it back to INFO or WARN for production.
 
 ### Message processors
-
 
 ### Performance considerations
 
