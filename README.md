@@ -94,7 +94,7 @@ After startup, logs shall eventually contain following line:
 To generate an event into PubSub+, we will use the "Try Me!" test service of the browser-based administration console to publish test messages to the `sourcetest` topic. Behind the scenes, "Try Me!" is using the WebSocket API from JavaScript code.
 
 * If you are using PubSub+ Cloud for your messaging service follow the [Trying Out Your Messaging Service guide](//docs.solace.com/Solace-Cloud/ggs_tryme.htm).
-* If using an existing event broker, log in to its [PubSub+ Manager admin console](//docs.solace.com/Solace-PubSub-Manager/PubSub-Manager-Overview.htm#mc-main-content), and follow the [ How to Send and Receive Test Messages guide] (//docs.solace.com/Solace-PubSub-Manager/PubSub-Manager-Overview.htm#Test-Messages ) .
+* If using an existing event broker, log in to its [PubSub+ Manager admin console](//docs.solace.com/Solace-PubSub-Manager/PubSub-Manager-Overview.htm#mc-main-content) and follow the [How to Send and Receive Test Messages guide] (//docs.solace.com/Solace-PubSub-Manager/PubSub-Manager-Overview.htm#Test-Messages).
 
 In both cases ensure to set the topic to `sourcetest`, which the connector is listening to.
 
