@@ -1,5 +1,5 @@
 {
-	"name": "solaceConnector",
+	"name": "solaceSourceConnector",
 	"config": {
     "name": "solaceSourceConnector",
     "connector.class": "com.solace.source.connector.SolaceSourceConnector",
