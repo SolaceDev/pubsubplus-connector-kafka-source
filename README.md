@@ -53,7 +53,7 @@ The PubSub+ Source Connector eliminates the complexity and overhead of maintaini
 
 ## Downloads
 
-ZIP or TAR packaged PubSub+ Kafka source connector is available from the [downloads](//solacedev.github.io/pubsubplus-connector-kafka-source/downloads/) page.
+ZIP or TAR packaged PubSub+ Kafka Source Connector is available from the [downloads](//solacedev.github.io/pubsubplus-connector-kafka-source/downloads/) page.
 
 The package includes jar libraries, documentation with license information and sample property files. Download and expand it into a directory that is on the `plugin.path` of your connect-standalone or connect-distributed properties file.
 
@@ -104,7 +104,7 @@ To generate an event into PubSub+, we will use the "Try Me!" test service of the
 
 In both cases ensure to set the topic to `sourcetest`, which the connector is listening to.
 
-The Kafka consumer from Step 6 should now display the new message arriving to Kafka through the PubSub+ Kafka source connector:
+The Kafka consumer from Step 6 should now display the new message arriving to Kafka through the PubSub+ Kafka Source Connector:
 ```
 Hello world!
 ```
@@ -113,7 +113,7 @@ Hello world!
 
 Connector parameters consist of [Kafka-defined parameters](https://kafka.apache.org/documentation/#connect_configuring) and PubSub+ connector-specific parameters.
 
-Refer to the in-line documentation of the [sample PubSub+ Kafka source connector properties file](/etc/solace_source.properties) and additional information in the [Configuration](#Configuration) section.
+Refer to the in-line documentation of the [sample PubSub+ Kafka Source Connector properties file](/etc/solace_source.properties) and additional information in the [Configuration](#Configuration) section.
 
 ## User Guide
 
@@ -140,10 +140,9 @@ First test to confirm the PubSub+ Source Connector is available for use in distr
 curl http://18.218.82.209:8083/connector-plugins | jq
 ```
 
-In this case the IP address is one of the nodes running the distributed mode worker process, the port is default 8083 or as specified in the `rest.port` property in `connect-distributed.properties`. If the connector is loaded correctly, you should see something similar to:
+In this case the IP address is one of the nodes running the distributed mode worker process, the port is default 8083 or as specified in the `rest.port` property in `connect-distributed.properties`. If the connector is loaded correctly, you should see a response similar to:
 
 ```
-[
   {
     "class": "com.solace.source.connector.SolaceSourceConnector",
     "type": "source",
@@ -191,31 +190,150 @@ log4j.logger.com.solacesystems.jcsmp=DEBUG
 ```
 Ensure to set it back to INFO or WARN for production.
 
-### Message processors
+### Event Processing
 
-### Performance considerations
+#### Message processors
+
+There are many ways to map PubSub+ messages to Kafka topic, partition, key and values, depending on the application behind the events.
+
+The PubSub+ Source Connector comes with two sample message processors that can be used as is, or as a starting point to develop a customized message processor.
+
+* **SimpleMessageProcessor** - which takes the PubSub+ message as a binary payload and creates a Kafka Source record with a Binary Schema for the value (PubSub+ message payload).
+* **SampleKeyedMessageProcessor** - A more complex sample that allows the flexibility of changing the Source Record Key Schema and which value from the PubSub+ message to use as a key. The option of no key in the record is also possible.
+
+The desired message processor is loaded at runtime based on the configuration of the JSON or properties configuration file, for example:
+```
+sol.message_processor_class=com.solace.source.connector.msgprocessors.SolSampleSimpleMessageProcessor
+```
+
+It is possible to create more custom message processors based on you Kafka record requirements for keying and/or value serialization and the desired format of the PubSub+ event message. Simply add the new message processor classes to the project. The desired message processor is installed at run time based on the configuration file. 
+
+Refer to the [Developers Guide](#developers-guide) for more information about building the Source Connector and extending message processors.
+
+### Performance and reliability considerations
+
+#### Ingesting from PubSub+ Topics
+
+When ingesting from PubSub+ Topics, the event broker uses "best effort" to deliver the events to the Source Connector. If the connector is down, or messages are constantly generated at a rate faster than can be written to Kafka, there will be potential for data loss. If Kafka is configured for it's highest throughput, it also is susceptible for loss and obviously, cannot add records if the Kafka broker is unavailable.
+
+When a Kafka Topic is configured for high throughput the use of topics to receive data event messages is acceptable and recommended.
+
+The connector can ingest using a list of topic subscriptions, where each can be a  [wild-card](//docs.solace.com/PubSub-Basics/Wildcard-Charaters-Topic-Subs.htm) subscription.
+
+#### Ingesting from PubSub+ Queue
+
+It is also possible to have the PubSub+ Source Connector to attract data events from a  PubSub+ Queue. A queue guarantees order of delivery, provides High Availability and Disaster Recovery (depending on the setup of the PubSub+ brokers) and provides an acknowledgment to the message producer (in this case the PubSub+ event producer application) when the event is stored in all HA and DR members and flushed to disk. This is a higher guarantee than is provided by Kafka even for Kafka idempotent delivery.
+
+When a Kafka Topic is configured with it's highest quality-of-service with respect to record loss or duplication, it results in a large reduction in record processing throughput. However, in some application requirements this QoS is required. In this case, the PubSub+ Source Connector should use Queue for the consumption of events from the Event Mesh.
+
+Note that one connector can only ingest from one queue.
+
+##### Recovery from Connect or Kafka Broker Fail
+
+When the connector is consuming from a PubSub+ queue, a timed Kafka Connect process commits the source records and offset to disk on the Kafka broker and calls the connector to acknowledge the messages that were processed so far, which removes these event messages from the event broker queue. 
+
+If Kafka Connect or the Kafka broker goes down, unacknowledged messages are not lost, they will be retransmitted as soon as Connect or Kafka are restarted. It is important to note that while Connect or the Kafka Broker are off-line, the PubSub+ queue will continue to add event messages, so there will be no loss of new data from the PubSub+ Event Mesh.
+
+The commit time interval is configurable via the `offset.flush.interval.ms` parameter (default 60,000 ms) in the worker's `connect-distributed.properties` configuration file. If high message rate is expected the parameter shall be tuned, taking into consideration that each task (in case of [Multiple Workers](#multiple-workers)) shall not allow excessively large (for example, 10,000 or more) amount of unacknowledged messages.
+
+##### Queue Handling of Data Bursts
+
+If the throughput through the Connect is not high enough, and messages are starting to accumulate in the PubSub+ Queue, scaling of the Connector is recommended as discussed [below](#multiple-workers).
+
+If the Source Connector has not been scaled to a required level to deal with bursts, the Queue can act as a "shock absorber" to deal with micro-bursts or sustained periods of heavy event generation in the Event Mesh so data events will no be lost due to an unforeseen event.
+
+#### Ingesting from a Queue configured with Topic-To-Queue Mapping
+
+The Topic-to-Queue Mapping is the simple process of configuring a PubSub+ Queue to attract PubSub+ Topic data event. These data events will immediately be available via the queue with a protection against record loss and "shock absorber" advantage that use of a Queue provides.
+
+Topic-to-Queue Mapping, just like any PubSub+ topic subscriptions, allow wild-card subscriptions to multiple topics.
+
+#### Multiple Workers
+
+The PubSub+ broker supports far greater throughput than can be afforded through a single instance of the Connect API. The Kafka Broker can also process records at a rate far greater than available through a single instance of the Connector. 
+Therefore, multiple instances of the Source Connector will increase throughput from the Kafka broker to the Solace PubSub+ broker.
+
+Multiple connector tasks are automatically deployed and spread across all available Connect workers simply by indicating the number of desired tasks in the connector configuration file.
+
+PubSub+ queue or topic subscriptions must be configured properly to support distributed consumption, so events are automatically load balanced between the multiple workers:
+
+* If the ingestion source is a Queue, it must be configured as [non-exclusive](//docs.solace.com/PubSub-Basics/Endpoints.htm#Queue_Access_Types), which permits multiple consumers to receive messages in a round-robin fashion.
+
+* By the nature of Topics, if there are multiple subscribers to a topic, 
+all subscribers will receive all of the same topic data event messages. Load balancing can be achieved by applying [Shared Subscriptions](//docs.solace.com/PubSub-Basics/Direct-Messages.htm#Shared), which ensures that messages are delivered to only one active subscriber at a time. 
+
+Note that Shared Subscriptions may need to be [administratively enabled](//docs.solace.com/Configuring-and-Managing/Configuring-Client-Profiles.htm#Allowing-Shared-Subs) in the event broker Client Profile. Also note that Shared Subscriptions are not available on older versions of the event broker - the deprecated [DTO (Deliver-To-One) feature](//docs.solace.com/Configuring-and-Managing/DTO.htm) can be used instead.
 
 ### Security Considerations
 
+The security setup and operation between the PubSub+ broker and the Source Connector and Kafka broker and the Source Connector operate completely independently.
+ 
+The Source Connector supports both PKI and Kerberos for more secure authentication beyond the simple user name/password, when connecting to the PubSub+ event broker.
+
+The security setup between the Source Connector and the Kafka brokers is controlled by the Kafka Connect libraries. These are exposed in the configuration file as parameters based on the Kafka-documented parameters and configuration. Please refer to the [Kafka documentation](//docs.confluent.io/current/connect/security.html) for details on securing the Source Connector to the Kafka brokers for both PKI/TLS and Kerberos. 
+
+#### PKI/TLS
+
+The PKI/TLS support is [well documented in the Solace Documentation](//docs.solace.com/Configuring-and-Managing/TLS-SSL-Service-Connections.htm), and will not be repeated here. All the PKI required configuration parameters are part of the configuration variable for the Solace session and transport as referenced above in the [Parameters section](#parameters). Sample parameters are found in the included [properties file](/etc/solace_source.properties). 
+
+#### Kerberos authentication
+
+Kerberos authentication support requires a bit more configuration than PKI since it is not defined as part of the Solace session or transport. Typical Kerberos client applications require details about the Kerberos configuration and details for the authentication. Since the Source Connector is a server application (i.e. no direct user interaction) a Kerberos keytab file is required as part of the authentication on each machine where the connector is deployed. 
+
+The enclosed [krb5.conf](/etc/krb5.conf) and [login.conf](/etc/login.conf) configuration files are samples that will allow automatic Kerberos authentication for the Source Connector when it is deployed to the Connect Cluster. It does not matter where the files are located, but they must be also available on all Kafka Connect cluster nodes and placed in the same location on all the nodes. The files are then referenced in the connector configuration files, for example:
+```ini
+sol.kerberos.login.conf=/opt/kerberos/login.conf
+sol.kerberos.krb5.conf=/opt/kerberos/krb5.conf
+```
+
+Following Source Connector configuration entry is also required to use Kerberos Authentication:
+```ini
+sol.authentication_scheme=AUTHENTICATION_SCHEME_GSS_KRB
+```
+
+Hints: Kerberos has some very specific requirements to operate correctly:
+* DNS must be operating correctly both in the Kafka brokers and on the Solace PS+ broker.
+* Time services are recommended for use with the Kafka Cluster nodes and the Solace PS+ broker. If there is too much drift in the time between the nodes Kerberos will fail.
+* You must use the DNS name in the Solace PS+ host URI in the Connector configuration file and not the IP address
+* You must use the full Kerberos user name (including the Realm) in the configuration property, obviously no password is required. 
+
+
 ## Developers Guide
 
-### Build the project
+### Build and test the project
 
+JDK 8 or higher is required for this project.
 
+First, clone this GitHub repo:
+```
+git clone https://github.com/SolaceProducts/pubsubplus-connector-kafka-source.git
+cd pubsubplus-connector-kafka-source
+```
 
+Then run the build script:
+```
+gradlew clean build
+```
 
+This will create artifacts in the `build` directory, including the deployable packaged PubSub+ Source Connector archives under `build\distributions`.
 
+An integration test suite is also included, which spins up a Docker-based deployment environment that includes a PubSub+ event broker, Zookeeper, Kafka broker, Kafka Connect. It deploys the connector to Kafka Connect and runs end-to-end tests.
+```
+gradlew clean integrationTest --tests com.solace.messaging.kafka.it.SourceConnectorIT
+```
 
+### Build a new message processor
 
+The processing of the Solace message to create a Kafka source record is handled by an interface definition defined in [`SolaceMessageProcessorIF.java`](/src/main/java/com/solace/source/connector/SolMessageProcessorIF.java). This is a simple interface that is used to create the Kafka source records from the PubSub+ messages. There are two examples included of classes that implement this interface:
 
+* [SolSampleSimpleMessageProcessor](/src/main/java/com/solace/source/connector/msgprocessors/SolSampleSimpleMessageProcessor.java)
+* [SolaceSampleKeyedMessageProcessor](/src/main/java/com/solace/source/connector/msgprocessors/SolaceSampleKeyedMessageProcessor.java)
 
+These can be used as starting points for custom message processor implementations.
 
-
-
-
-
-
-
+More information on Kafka source connector development can be found here:
+- [Apache Kafka Connect](https://kafka.apache.org/documentation/)
+- [Confluent Kafka Connect](https://docs.confluent.io/current/connect/index.html)
 
 ## Contributing
 
