@@ -16,8 +16,8 @@ Contents:
   * [User Guide](#user-guide)
     + [Deployment](#deployment)
     + [Troubleshooting](#troubleshooting)
-    + [Message processors](#message-processors)
-    + [Performance considerations](#performance-considerations)
+    + [Message Processors](#message-processors)
+    + [Performance Considerations](#performance-considerations)
     + [Security Considerations](#security-considerations)  
   * [Developers Guide](#developers-guide)
 
@@ -72,7 +72,7 @@ It builds on the open source [Apache Kafka Quickstart tutorial](https://kafka.ap
 2. Install PubSub+ Source Connector. Designate and create a directory for the PubSub+ Source Connector - assuming it is named `connectors`. Edit `config/connect-standalone.properties` and ensure the `plugin.path` parameter value includes the absolute path of the `connectors` directory.
 [Download]( https://solacedev.github.io/pubsubplus-connector-kafka-source/downloads ) and extract the PubSub+ Source Connector into the `connectors` directory.
 
-3. Acquire access to a PubSub+ message broker. If you don't already have one available, the easiest option is to get a free-tier service in a few minutes in [PubSub+ Cloud](//solace.com/try-it-now/) , following the [Creating Your First Messaging Service](https://docs.solace.com/Solace-Cloud/ggs_signup.htm) guide. 
+3. Acquire access to a PubSub+ message broker. If you don't already have one available, the easiest option is to get a free-tier service in a few minutes in [PubSub+ Cloud](//solace.com/try-it-now/) , following the instructions in [Creating Your First Messaging Service](https://docs.solace.com/Solace-Cloud/ggs_signup.htm). 
 
 4. Configure the PubSub+ Source Connector:
 
