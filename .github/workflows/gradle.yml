@@ -4,10 +4,11 @@
 name: Java CI with Gradle
 
 on:
-  push:
   schedule:
   - cron: "0 * * * *"
-  
+
+  push:
+
 jobs:
   build:
 
