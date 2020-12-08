@@ -1,6 +1,6 @@
 # This workflow will build and test a Java project with Gradle
 
-name: daily-sanity-master.yml
+name: daily-sanity-master
 
 on:
   schedule:
