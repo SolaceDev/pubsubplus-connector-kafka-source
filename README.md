@@ -6,5 +6,5 @@ This branch is used for scheduled test runs only.
 
 Status:
 
-[![Actions Status](https://github.com/SolaceDev/pubsubplus-connector-kafka-source/workflows/daily-sanity-master.yml/badge.svg)](https://github.com/SolaceDev/pubsubplus-connector-kafka-source/actions?query=workflow%3Adaily-sanity-master.yml)
+[![Actions Status](https://github.com/SolaceDev/pubsubplus-connector-kafka-source/workflows/daily-sanity-master/badge.svg)](https://github.com/SolaceDev/pubsubplus-connector-kafka-source/actions?query=workflow%3Adaily-sanity-master)
 
