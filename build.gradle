@@ -2,15 +2,15 @@ import com.github.spotbugs.snom.SpotBugsTask
 import io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository
 
 plugins {
-    id 'java'
+    id 'java-library'
     id 'distribution'
     id 'jacoco'
     id 'maven-publish'
     id 'pmd'
     id 'signing'
-    id 'com.github.spotbugs' version '4.7.6'
+    id 'com.github.spotbugs' version '5.0.12'
     id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
-    id 'org.unbroken-dome.test-sets' version '2.2.1'
+    id 'org.unbroken-dome.test-sets' version '4.0.0'
 }
 
 ext {
@@ -55,19 +55,24 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
     testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.16.0'
-    compile "org.apache.kafka:connect-api:$kafkaVersion"
-    compile "com.solacesystems:sol-jcsmp:$solaceJavaAPIVersion"
+    implementation "org.apache.kafka:connect-api:$kafkaVersion"
+    implementation "com.solacesystems:sol-jcsmp:$solaceJavaAPIVersion"
 }
 
 pmd {
     consoleOutput = true
     rulesMinimumPriority = 2
-    toolVersion = '6.38.0'
+    toolVersion = '6.49.0'
+    sourceSets = [sourceSets.main]
 }
 
 spotbugs {
     effort 'max'
     reportLevel 'high' // Decrease to medium once medium errors are fixed
+}
+
+spotbugsIntegrationTest {
+    enabled = false
 }
 
 task('jacocoFullReport', type: JacocoReport) {
@@ -175,6 +180,11 @@ task('pmdMainSarif') {
     }
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
 task('generateJava', type: Copy) {
     def templateContext = [version: project.version]
     inputs.properties templateContext // Register context as input so that task doesn't skip when props are updated
@@ -202,7 +212,7 @@ distributions {
             from('THIRD-PARTY-LICENSES') { into 'doc' }
             into('lib') {
                 from jar
-                from(project.configurations.runtime)
+                from(project.configurations.runtimeClasspath)
             }
             // from jar
         }
